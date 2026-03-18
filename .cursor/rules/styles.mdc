@@ -1,0 +1,211 @@
+---
+description: Tailwind CSS 활용, 클래스 명명 규칙, 테마 시스템, 성능 최적화
+globs: src/**/*.{css,scss,tsx,ts}
+alwaysApply: false
+---
+
+# 스타일 규칙
+
+## 1. Tailwind CSS 사용 규칙
+
+```tsx
+// ✅ 유틸리티 클래스 기본 사용
+<button className="rounded-lg bg-primary px-4 py-2 text-white hover:bg-primary/90">
+  게시글 보기
+</button>
+
+// ✅ 반응형 - Tailwind 브레이크포인트 사용
+<div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+
+// ✅ 다크모드 - dark: 접두사 활용
+<article className="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100">
+
+// ✅ variants로 동적 스타일 (cva 활용)
+import { cva } from "class-variance-authority";
+
+const badge = cva("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", {
+  variants: {
+    variant: {
+      default: "bg-primary/10 text-primary",
+      secondary: "bg-secondary/10 text-secondary",
+      destructive: "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400",
+    },
+  },
+  defaultVariants: { variant: "default" },
+});
+```
+
+- 커스텀 유틸리티는 `tailwind.config.ts`에 정의
+- `!important` 사용 금지
+
+## 2. CSS 클래스 명명 규칙
+
+```css
+/* kebab-case 사용 */
+.header-navigation { ... }
+.post-card { ... }
+
+/* 상태 클래스 - is-* / has-* 접두사 */
+.is-active { ... }
+.is-loading { ... }
+.has-error { ... }
+
+/* 유틸리티 클래스 - u-* 접두사 */
+.u-visually-hidden { ... }
+.u-truncate { ... }
+
+/* BEM (필요한 경우) */
+.post-card__title { ... }
+.post-card__title--featured { ... }
+```
+
+## 3. 글로벌 스타일 (`globals.css`)
+
+```css
+@import "tailwindcss";
+
+/* CSS 변수 기반 테마 */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96.1%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --border: 214.3 31.8% 91.4%;
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --primary: 217.2 91.2% 59.8%;
+  --border: 217.2 32.6% 17.5%;
+}
+
+/* 공통 애니메이션 */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+```
+
+## 4. 컴포넌트 스타일
+
+```css
+/* ✅ 복잡한 반복 스타일은 @apply 활용 */
+.prose-custom {
+  @apply max-w-none text-gray-700 dark:text-gray-300;
+  @apply [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-8 [&_h2]:mb-4;
+  @apply [&_code]:rounded [&_code]:bg-muted [&_code]:px-1.5 [&_code]:py-0.5;
+}
+```
+
+- 모듈 CSS 대신 **Tailwind 유틸리티 우선**
+- 중첩은 최대 **3단계**까지만 허용
+- `@apply`는 Tailwind로 표현이 과도하게 길어지는 경우에만 사용
+
+## 5. 성능 최적화
+
+```css
+/* ✅ 애니메이션은 transform / opacity 위주 (GPU 가속) */
+.card-hover {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+}
+
+/* ⚠️ will-change는 실제 필요한 경우만 (메모리 소비) */
+.animated-element {
+  will-change: transform; /* 애니메이션 직전에만 적용 */
+}
+
+/* ❌ layout을 유발하는 속성 애니메이션 지양 */
+/* width, height, top, left, margin, padding → 리플로우 발생 */
+```
+
+- Tailwind v4는 자동으로 사용하지 않는 클래스 제거 (별도 PurgeCSS 불필요)
+
+## 6. 접근성
+
+```css
+/* ✅ 키보드 포커스 스타일 필수 제공 */
+:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* ✅ 동작 감소 모드 지원 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ✅ 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  :root {
+    --border: 0 0% 20%;
+  }
+}
+```
+
+- 색상 대비 WCAG 2.1 AA 기준 이상 (4.5:1)
+- 반응형 폰트: `text-sm md:text-base` 방식으로 처리
+
+## 7. 테마 시스템
+
+```ts
+// tailwind.config.ts
+export default {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        background: "hsl(var(--background) / <alpha-value>)",
+        foreground: "hsl(var(--foreground) / <alpha-value>)",
+        primary: {
+          DEFAULT: "hsl(var(--primary) / <alpha-value>)",
+          foreground: "hsl(var(--primary-foreground) / <alpha-value>)",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted) / <alpha-value>)",
+          foreground: "hsl(var(--muted-foreground) / <alpha-value>)",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
+      },
+    },
+  },
+} satisfies Config;
+```
+
+## 8. 애니메이션
+
+```tsx
+// ✅ Tailwind 애니메이션 클래스 활용
+<div className="animate-fade-in">...</div>
+<div className="animate-pulse">...</div>  {/* 스켈레톤 */}
+
+// ✅ 전환 효과 일관성
+// 빠른 인터랙션: duration-150
+// 일반 전환:     duration-200 ~ duration-300
+// 페이지 전환:   duration-500
+
+<button className="transition-colors duration-150 hover:bg-primary/90">
+<div className="transition-all duration-300 ease-in-out">
+```
+
+- `prefers-reduced-motion` 미디어 쿼리 항상 고려
+- 타이밍 함수: 기본 `ease`, 등장 `ease-out`, 퇴장 `ease-in`

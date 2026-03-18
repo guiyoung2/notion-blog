@@ -1,0 +1,155 @@
+---
+description: 컴포넌트 구조, 작성 규칙, shadcn/ui 활용 방법
+globs: src/components/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# 컴포넌트 규칙
+
+## 1. 파일 명명 규칙
+
+- 파일명: **PascalCase** (`Button.tsx`, `UserProfile.tsx`)
+- Props 타입: **컴포넌트명 + Props** (`ButtonProps`, `UserProfileProps`)
+- 테스트: `Button.test.tsx`
+- 스토리북: `Button.stories.tsx`
+
+## 2. 디렉토리 구조
+
+```
+src/components/
+  common/       # 여러 페이지에서 공통으로 재사용되는 독립적인 기본 컴포넌트
+  ui/           # shadcn/ui 기반 디자인 시스템 컴포넌트
+  forms/        # 입력 요소 및 폼 관련 컴포넌트
+  layouts/      # 페이지 전체 구조/배치 담당 레이아웃 컴포넌트
+  providers/    # 전역 상태/설정을 제공하는 Context Provider 모음
+  features/     # 특정 도메인/기능에 특화된 복잡한 컴포넌트 그룹
+```
+
+## 3. 컴포넌트 작성 규칙
+
+```tsx
+// ✅ Props 인터페이스 명시적 정의
+interface PostCardProps {
+  title: string;
+  slug: string;
+  children: React.ReactNode; // children은 타입 명시 필수
+  className?: string;
+  onClick?: () => void;
+}
+
+// ✅ 기본값은 매개변수 기본값 사용 (defaultProps X)
+export function PostCard({
+  title,
+  slug,
+  children,
+  className = "",
+  onClick,
+}: PostCardProps) {
+  return (
+    // ✅ 불필요한 div 중첩 지양, Fragment 활용
+    <>
+      <article className={className} onClick={onClick}>
+        <h2>{title}</h2>
+        {children}
+      </article>
+    </>
+  );
+}
+```
+
+- 단일 책임 원칙 준수 — 하나의 컴포넌트는 하나의 역할만
+
+## 4. shadcn/ui 활용
+
+```tsx
+// ✅ 기본 UI는 shadcn/ui 우선 사용
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+
+// ✅ 커스터마이징은 variants 활용 (직접 스타일 오버라이드 X)
+import { cva } from "class-variance-authority";
+
+const buttonVariants = cva("base-styles", {
+  variants: {
+    variant: {
+      primary: "bg-primary text-white",
+      ghost: "bg-transparent hover:bg-accent",
+    },
+    size: {
+      sm: "h-8 px-3 text-sm",
+      md: "h-10 px-4",
+    },
+  },
+  defaultVariants: { variant: "primary", size: "md" },
+});
+```
+
+- 새 컴포넌트 작성 시 shadcn/ui 스타일 가이드 준수
+
+## 5. 성능 최적화
+
+```tsx
+// 무거운 컴포넌트 - 코드 스플리팅
+const HeavyEditor = dynamic(() => import("@/components/features/Editor"), {
+  ssr: false,
+  loading: () => <EditorSkeleton />,
+});
+
+// 불필요한 리렌더링 방지
+const MemoizedCard = memo(PostCard);
+const handleClick = useCallback(() => { ... }, [dep]);
+const filtered = useMemo(() => posts.filter(...), [posts]);
+
+// 큰 리스트 - 가상화 적용
+import { useVirtualizer } from "@tanstack/react-virtual";
+```
+
+- 이미지는 반드시 `next/image` 사용
+
+## 6. 접근성 (A11y)
+
+```tsx
+// ✅ 시맨틱 HTML + ARIA 속성
+<nav aria-label="메인 네비게이션">
+  <ul role="list">
+    <li><a href="/about">소개</a></li>
+  </ul>
+</nav>
+
+<button
+  aria-label="게시글 좋아요"
+  aria-pressed={liked}
+  onClick={toggleLike}
+>
+  ♥
+</button>
+```
+
+- 키보드 네비게이션 지원 (`tabIndex`, `onKeyDown`)
+- 색상 대비 WCAG AA 기준 이상 유지 (4.5:1)
+
+## 7. 상태 관리
+
+| 상태 종류 | 도구 |
+|-----------|------|
+| 로컬 상태 | `useState` / `useReducer` |
+| 전역 상태 | `Zustand` |
+| 폼 상태 | `react-hook-form` |
+| 서버 상태 | `React Query (TanStack Query)` |
+
+```tsx
+// 전역 상태 - Zustand
+const usePostStore = create<PostStore>((set) => ({
+  posts: [],
+  setPosts: (posts) => set({ posts }),
+}));
+
+// 폼 상태 - react-hook-form
+const { register, handleSubmit, formState: { errors } } = useForm<FormValues>();
+
+// 서버 상태 - React Query
+const { data, isLoading } = useQuery({
+  queryKey: ["posts"],
+  queryFn: getPosts,
+});
+```

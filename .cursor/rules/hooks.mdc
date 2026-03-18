@@ -1,0 +1,193 @@
+---
+description: 커스텀 훅 작성 규칙, 디렉토리 구조, 에러 처리
+globs: src/hooks/**/*.ts
+alwaysApply: false
+---
+
+# 커스텀 훅 규칙
+
+## 1. 파일 명명 규칙
+
+- 파일명: **camelCase + `use` 접두사 필수** (`useAuth.ts`, `usePosts.ts`)
+- 테스트: `useAuth.test.ts`
+- 타입: `useAuth.types.ts`
+- 유틸리티: 별도 파일 분리 (`authUtils.ts`)
+
+## 2. 디렉토리 구조
+
+```
+src/hooks/
+  auth/     # 인증 관련 훅 (useAuth, useSession 등)
+  form/     # 폼 관련 훅 (useFormValidation 등)
+  query/    # API 요청 관련 훅 (usePosts, usePost 등)
+  store/    # 상태 관리 관련 훅 (usePostStore 등)
+  ui/       # UI 관련 훅 (useModal, useToast, useScroll 등)
+  utils/    # 유틸리티 훅 (useDebounce, useLocalStorage 등)
+```
+
+## 3. 코드 작성 규칙
+
+```ts
+// ✅ 입력은 옵션 객체 패턴, 반환은 객체로
+interface UsePostsOptions {
+  page?: number;
+  limit?: number;
+  tag?: string;
+}
+
+interface UsePostsReturn {
+  posts: Post[];
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  refetch: () => void;
+}
+
+export function usePosts(options: UsePostsOptions = {}): UsePostsReturn {
+  const { page = 1, limit = 10, tag } = options;
+  // ...
+}
+
+// ✅ 구조 분해 할당으로 필요한 것만 사용 가능
+const { posts, isLoading } = usePosts({ page: 1 });
+```
+
+- 단일 책임 원칙 준수 — 하나의 훅은 하나의 관심사만
+- 의존성 배열 정확하게 명시 (`useEffect`, `useCallback`, `useMemo`)
+- 조건부 훅 호출 금지 (React Rules of Hooks)
+
+## 4. 타입 정의
+
+```ts
+// 입력/반환 타입 명시적 정의
+interface UseAuthOptions {
+  redirectTo?: string;
+  onSuccess?: (user: User) => void;
+}
+
+interface UseAuthReturn {
+  user: User | null;
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+  login: (credentials: Credentials) => Promise<void>;
+  logout: () => Promise<void>;
+}
+
+// 제네릭으로 재사용성 향상
+interface UseFetchOptions<T> {
+  initialData?: T;
+  enabled?: boolean;
+}
+
+interface UseFetchReturn<T> {
+  data: T | null;
+  isLoading: boolean;
+  isError: boolean;
+  error: Error | null;
+}
+
+export function useFetch<T>(url: string, options: UseFetchOptions<T> = {}): UseFetchReturn<T> {
+  // ...
+}
+```
+
+## 5. 에러 처리
+
+```ts
+export function usePost(slug: string) {
+  const [post, setPost] = useState<Post | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    if (!slug) return;
+
+    const fetchPost = async () => {
+      setIsLoading(true);
+      setIsError(false);
+      setError(null);
+
+      try {
+        const data = await getPost(slug);
+        setPost(data);
+      } catch (err) {
+        setIsError(true);
+        setError(err instanceof Error ? err : new Error("게시글을 불러오지 못했습니다"));
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPost();
+  }, [slug]);
+
+  return { post, isLoading, isError, error };
+}
+```
+
+- `isLoading`, `isError`, `error` 상태 항상 포함
+- 에러는 `Error` 객체로 정규화하여 반환
+
+## 6. 성능 최적화
+
+```ts
+export function useFilteredPosts(posts: Post[], query: string) {
+  // 무거운 연산 메모이제이션
+  const filtered = useMemo(
+    () => posts.filter(p => p.title.includes(query)),
+    [posts, query]
+  );
+
+  // 콜백 메모이제이션
+  const handleSelect = useCallback((id: string) => {
+    // ...
+  }, []);
+
+  // 비동기 중복 요청 방지 - cleanup 활용
+  useEffect(() => {
+    let cancelled = false;
+
+    fetchData().then(data => {
+      if (!cancelled) setData(data);
+    });
+
+    return () => { cancelled = true; };
+  }, [dep]);
+
+  return { filtered, handleSelect };
+}
+```
+
+## 7. 테스트
+
+```ts
+// usePost.test.ts
+import { renderHook, waitFor } from "@testing-library/react";
+import { usePost } from "./usePost";
+
+describe("usePost", () => {
+  it("게시글을 정상적으로 불러온다", async () => {
+    const { result } = renderHook(() => usePost("test-slug"));
+
+    expect(result.current.isLoading).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+      expect(result.current.post).toBeDefined();
+    });
+  });
+
+  it("잘못된 slug에서 에러를 반환한다", async () => {
+    const { result } = renderHook(() => usePost("invalid-slug"));
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
+      expect(result.current.error).toBeInstanceOf(Error);
+    });
+  });
+});
+```
+
+- 정상 시나리오, 에러 케이스, 비동기 동작, 사이드 이펙트 테스트 필수
