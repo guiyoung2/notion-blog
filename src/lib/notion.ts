@@ -9,7 +9,7 @@ export const notion = new Client({
   auth: process.env.NOTION_TOKEN,
 });
 
-const mapPageToPost = (page: PageObjectResponse): Post => {
+function getPostMetadata(page: PageObjectResponse): Post {
   const { properties } = page;
 
   const getCoverImage = (cover: PageObjectResponse['cover']) => {
@@ -43,8 +43,43 @@ const mapPageToPost = (page: PageObjectResponse): Post => {
         : '',
     date: properties.Date.type === 'date' ? (properties.Date.date?.start ?? '') : '',
     modifiedDate: page.last_edited_time,
-    slug: properties.Slug.type === 'rich_text' ? (properties.Slug.rich_text[0]?.plain_text ?? page.id) : page.id,
+    slug:
+      properties.Slug.type === 'rich_text'
+        ? (properties.Slug.rich_text[0]?.plain_text ?? page.id)
+        : page.id,
   };
+}
+
+export const getPostBySlug = async (slug: string): Promise<{ markdown: string; post: Post }> => {
+  const response = await notion.dataSources.query({
+    data_source_id: process.env.NOTION_DATA_SOURCE_ID!,
+    filter: {
+      and: [
+        {
+          property: 'Slug',
+          rich_text: {
+            equals: slug,
+          },
+        },
+        {
+          property: 'Status',
+          select: {
+            equals: 'Published',
+          },
+        },
+      ],
+    },
+  });
+
+  return {
+    markdown: '',
+    post: getPostMetadata(response.results[0] as PageObjectResponse),
+  };
+  // return mapPageToPost(response);
+};
+
+const mapPageToPost = (page: PageObjectResponse): Post => {
+  return getPostMetadata(page);
 };
 
 const getAllPublishedPosts = unstable_cache(
