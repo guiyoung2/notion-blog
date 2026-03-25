@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next';
 import createMDX from '@next/mdx';
+import remarkGfm from 'remark-gfm';
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -22,6 +23,10 @@ const nextConfig: NextConfig = {
 
 const withMDX = createMDX({
   // 필요한 마크다운 플러그인을 추가할 수 있음
+  options: {
+    // remarkPlugins: [remarkGfm],
+    remarkPlugins: [['remark-gfm']],
+  },
 });
 
-export default nextConfig;
+export default withMDX(nextConfig);
