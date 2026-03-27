@@ -121,7 +121,8 @@ export const getPublishedPosts = async (
 ): Promise<Post[]> => {
   const posts = await getAllPublishedPosts();
 
-  const filteredPosts = !tag || tag === '전체' ? posts : posts.filter((post) => post.tags?.includes(tag));
+  const filteredPosts =
+    !tag || tag === '전체' ? posts : posts.filter((post) => post.tags?.includes(tag));
 
   // 날짜가 비어있거나 잘못된 경우에도 안전하게 정렬되도록 0으로 처리
   return [...filteredPosts].sort((a, b) => {
