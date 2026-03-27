@@ -115,14 +115,20 @@ const getAllPublishedPosts = unstable_cache(
   { revalidate: 60, tags: ['notion-posts'] }
 );
 
-export const getPublishedPosts = async (tag?: string): Promise<Post[]> => {
+export const getPublishedPosts = async (
+  tag?: string,
+  sort: 'latest' | 'oldest' = 'latest'
+): Promise<Post[]> => {
   const posts = await getAllPublishedPosts();
 
-  if (!tag || tag === '전체') {
-    return posts;
-  }
+  const filteredPosts = !tag || tag === '전체' ? posts : posts.filter((post) => post.tags?.includes(tag));
 
-  return posts.filter((post) => post.tags?.includes(tag));
+  // 날짜가 비어있거나 잘못된 경우에도 안전하게 정렬되도록 0으로 처리
+  return [...filteredPosts].sort((a, b) => {
+    const aTime = Date.parse(a.date || '') || 0;
+    const bTime = Date.parse(b.date || '') || 0;
+    return sort === 'latest' ? bTime - aTime : aTime - bTime;
+  });
 };
 
 export const getTags = async (): Promise<TagFilterItem[]> => {
