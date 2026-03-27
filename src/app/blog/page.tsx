@@ -3,7 +3,7 @@ import ProfileSection from '@/app/_components/ProfileSection';
 import ContactSection from '@/app/_components/ContactSection';
 import { getTags, getPublishedPosts } from '@/lib/notion';
 import HeaderSection from '@/app/_components/HeaderSection';
-import PostList from '@/components/features/blog/PostList';
+import PostListSuspense from '@/components/features/blog/PostListSuspense';
 interface BlogProps {
   searchParams: Promise<{ tag?: string; sort?: string }>;
 }
@@ -11,12 +11,10 @@ interface BlogProps {
 export default async function Blog({ searchParams }: BlogProps) {
   const { tag, sort } = await searchParams;
   const selectedTag = tag || '전체';
-  const selectedSort: 'latest' | 'oldest' = sort === 'oldest' ? 'oldest' : 'latest';
+  const selectedSort = sort || 'latest';
 
-  const [posts, tags] = await Promise.all([
-    getPublishedPosts(selectedTag, selectedSort),
-    getTags(),
-  ]);
+  const postsPromise = getPublishedPosts({ tag: selectedTag, sort: selectedSort });
+  const tags = await getTags();
 
   return (
     <div className="container py-8">
@@ -29,7 +27,7 @@ export default async function Blog({ searchParams }: BlogProps) {
           {/* 섹션 제목 */}
           <HeaderSection selectedTag={selectedTag} />
           {/* 블로그 카드 그리드 */}
-          <PostList posts={posts} />
+          <PostListSuspense postsPromise={postsPromise} />
         </div>
         {/* 우측 사이드바 */}
         <aside className="flex flex-col gap-6">

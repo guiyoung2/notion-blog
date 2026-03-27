@@ -84,56 +84,56 @@ export const getPostBySlug = async (slug: string): Promise<{ markdown: string; p
   // return mapPageToPost(response);
 };
 
-const mapPageToPost = (page: PageObjectResponse): Post => {
-  return getPostMetadata(page);
-};
+export interface GetPublishedPostsParams {
+  tag?: string;
+  sort?: string;
+  pageSize?: number;
+  startCursor?: string;
+}
 
-const getAllPublishedPosts = unstable_cache(
-  async (): Promise<Post[]> => {
-    const response = await notion.dataSources.query({
-      data_source_id: process.env.NOTION_DATA_SOURCE_ID!,
-      filter: {
-        property: 'Status',
-        select: {
-          equals: 'Published',
-        },
+export interface GetPublishedPostsResponse {
+  posts: Post[];
+  hasMore: boolean;
+  nextCursor: string | null;
+}
+
+export const getPublishedPosts = async ({
+  tag = '전체',
+  sort = 'latest',
+  pageSize = 3,
+  startCursor,
+}: GetPublishedPostsParams = {}): Promise<GetPublishedPostsResponse> => {
+  const response = await notion.dataSources.query({
+    data_source_id: process.env.NOTION_DATA_SOURCE_ID!,
+    filter: {
+      property: 'Status',
+      select: {
+        equals: 'Published',
       },
-      sorts: [
-        {
-          property: 'Date',
-          direction: 'descending',
-        },
-      ],
-      page_size: 100,
-    });
-
-    return response.results
-      .filter((page): page is PageObjectResponse => 'properties' in page)
-      .map(mapPageToPost);
-  },
-  ['notion-published-posts'],
-  { revalidate: 60, tags: ['notion-posts'] }
-);
-
-export const getPublishedPosts = async (
-  tag?: string,
-  sort: 'latest' | 'oldest' = 'latest'
-): Promise<Post[]> => {
-  const posts = await getAllPublishedPosts();
-
-  const filteredPosts =
-    !tag || tag === '전체' ? posts : posts.filter((post) => post.tags?.includes(tag));
-
-  // 날짜가 비어있거나 잘못된 경우에도 안전하게 정렬되도록 0으로 처리
-  return [...filteredPosts].sort((a, b) => {
-    const aTime = Date.parse(a.date || '') || 0;
-    const bTime = Date.parse(b.date || '') || 0;
-    return sort === 'latest' ? bTime - aTime : aTime - bTime;
+    },
+    sorts: [
+      {
+        property: 'Date',
+        direction: sort === 'latest' ? 'descending' : 'ascending',
+      },
+    ],
+    page_size: pageSize,
+    start_cursor: startCursor,
   });
+
+  const posts = response.results
+    .filter((page): page is PageObjectResponse => 'properties' in page)
+    .map(getPostMetadata);
+
+  return {
+    posts,
+    hasMore: response.has_more,
+    nextCursor: response.next_cursor,
+  };
 };
 
 export const getTags = async (): Promise<TagFilterItem[]> => {
-  const posts = await getAllPublishedPosts();
+  const { posts } = await getPublishedPosts({ pageSize: 100 });
 
   // 모든 태그를 추출하고 각 태그의 출현 횟수를 계산
   const tagCount = posts.reduce(
