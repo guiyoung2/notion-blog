@@ -96,7 +96,7 @@ export default async function BlogPost({ params }: BlogPostProps) {
           <Separator className="my-8" />
 
           {/* 블로그 본문 */}
-          <div className="prose prose-neutral dark:prose-invert prose-headings:scroll-mt-[var(--header-height)] max-w-none">
+          <div className="prose prose-neutral dark:prose-invert prose-headings:scroll-mt-(--header-height) max-w-none">
             <MDXRemote
               source={markdown}
               options={{
@@ -143,7 +143,7 @@ export default async function BlogPost({ params }: BlogPostProps) {
           </nav>
         </section>
         <aside className="relative">
-          <div className="sticky top-[var(--sticky-top)]">
+          <div className="sticky top-(--sticky-top)">
             <div className="bg-muted/60 space-y-4 rounded-lg p-6 backdrop-blur-sm">
               <h3 className="text-lg font-semibold">목차</h3>
               <nav className="space-y-3 text-sm">
