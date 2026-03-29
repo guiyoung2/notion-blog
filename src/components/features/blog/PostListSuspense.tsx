@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { PostCard } from '@/components/features/blog/PostCard';
-import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { GetPublishedPostsResponse } from '@/lib/notion';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -47,6 +46,7 @@ export default function PostList({ postsPromise }: PostListProps) {
   const { ref, inView } = useInView({
     threshold: 1,
   });
+  // 더보기 버튼으로 구현하는 방식
   //   const handleLoadMore = () => {
   //     if (hasNextPage && !isFetchingNextPage) {
   //       fetchNextPage();
@@ -76,6 +76,7 @@ export default function PostList({ postsPromise }: PostListProps) {
           <span className="text-muted-foreground text-sm">로딩중...</span>
         </div>
       )}
+      {/*  더보기 버튼으로 구현하는 방식 */}
       {/* {hasNextPage && (
         <div>
           <Button
