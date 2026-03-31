@@ -23,6 +23,7 @@ export default function PostList({ postsPromise }: PostListProps) {
     const params = new URLSearchParams();
     if (tag) params.set('tag', tag);
     if (sort) params.set('sort', sort);
+    params.set('pageSize', '3');
     if (pageParam) params.set('startCursor', pageParam);
 
     const response = await fetch(`/api/posts?${params.toString()}`);

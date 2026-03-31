@@ -7,6 +7,7 @@ import { Suspense } from 'react';
 import TagSectionClient from '@/app/_components/TagSection.client';
 import PostListSkeleton from '@/components/features/blog/PostListSkeleton';
 import TagSectionSkeleton from '@/app/_components/TagSectionSkeleton';
+
 interface HomeProps {
   searchParams: Promise<{ tag?: string; sort?: string }>;
 }
