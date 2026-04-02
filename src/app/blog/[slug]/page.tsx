@@ -15,6 +15,44 @@ import withTocExport from '@stefanprobst/rehype-extract-toc/mdx';
 import GiscusComments from '@/components/GiscusComments';
 import { notFound } from 'next/navigation';
 import { getPublishedPosts } from '@/lib/notion';
+import { Metadata } from 'next';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const { post } = await getPostBySlug(slug);
+
+  if (!post) {
+    return {
+      title: '포스트를 찾을 수 없습니다',
+      description: '요청하신 블로그 포스트를 찾을 수 없습니다.',
+    };
+  }
+
+  return {
+    title: post.title,
+    description: post.description || `${post.title} - guiyoung의 개발 블로그`,
+    keywords: post.tags,
+    authors: [{ name: post.author || 'guiyoung' }],
+    publisher: 'guiyoung',
+    alternates: {
+      canonical: `/blog/${post.slug}`,
+    },
+    openGraph: {
+      title: post.title,
+      description: post.description,
+      url: `/blog/${post.slug}`,
+      type: 'article',
+      publishedTime: post.date,
+      modifiedTime: post.modifiedDate,
+      authors: post.author || 'guiyoung',
+      tags: post.tags,
+    },
+  };
+}
 
 interface TocEntry {
   value: string;
