@@ -34,6 +34,11 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/',
   },
+  openGraph: {
+    title: 'guiyoung의 개발 블로그',
+    description: 'guiyoung의 개발 블로그',
+    images: ['/thumbnail.jpg'],
+  },
 };
 
 export default function RootLayout({
