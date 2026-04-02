@@ -66,6 +66,7 @@ export async function createPostAction(prevState: PostFormState, formData: FormD
       message: '블로그 포스트가 성공적으로 생성되었습니다.',
     };
   } catch (err) {
+    console.error(err);
     return {
       message: '블로그 포스트 생성에 실패했습니다.',
       formData: rawFormDate,

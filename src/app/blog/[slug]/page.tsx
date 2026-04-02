@@ -13,6 +13,8 @@ import withSlugs from 'rehype-slug';
 import withToc from '@stefanprobst/rehype-extract-toc';
 import withTocExport from '@stefanprobst/rehype-extract-toc/mdx';
 import GiscusComments from '@/components/GiscusComments';
+import { notFound } from 'next/navigation';
+import { getPublishedPosts } from '@/lib/notion';
 
 interface TocEntry {
   value: string;
@@ -22,6 +24,15 @@ interface TocEntry {
 }
 
 type Toc = Array<TocEntry>;
+
+export const generateMetadata = async () => {
+  const { posts } = await getPublishedPosts();
+  return posts.map((post) => ({
+    slug: post.slug,
+  }));
+};
+
+export const revalidate = 60;
 
 function TableOfContentsLink({ item }: { item: TocEntry }) {
   return (
@@ -51,6 +62,10 @@ interface BlogPostProps {
 export default async function BlogPost({ params }: BlogPostProps) {
   const { slug } = await params;
   const { markdown, post } = await getPostBySlug(slug);
+
+  if (!post) {
+    notFound();
+  }
 
   // TOC 추출 전용: rehypeSanitize가 id 속성을 제거하므로 제외
   const { data } = await compile(markdown, {
