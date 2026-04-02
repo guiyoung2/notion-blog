@@ -116,7 +116,7 @@ export default async function BlogPost({ params }: BlogPostProps) {
     <div className="container py-6 md:py-8 lg:py-12">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-[240px_1fr_240px] md:gap-8">
         <aside className="hidden md:block">{/* 추후 콘텐츠 추가 */}</aside>
-        <section>
+        <section className="overflow-hidden">
           {/* 블로그 헤더 */}
           <div className="space-y-4">
             <div className="space-y-2">
@@ -144,7 +144,7 @@ export default async function BlogPost({ params }: BlogPostProps) {
           <Separator className="my-8" />
 
           {/* 모바일 전용 목차 */}
-          <div className="sticky top-[var(--sticky-top)] mb-6 md:hidden">
+          <div className="sticky top-(--sticky-top) mb-6 md:hidden">
             <details className="bg-muted/60 rounded-lg p-4 backdrop-blur-sm">
               <summary className="cursor-pointer text-lg font-semibold">목차</summary>
               <nav className="mt-3 space-y-3 text-sm">

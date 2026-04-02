@@ -1,4 +1,4 @@
-import { Youtube, Github, BookOpen, Instagram } from 'lucide-react';
+import { Youtube, Github, Instagram } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,11 +11,6 @@ const socialLinks = [
   {
     icon: Github,
     href: 'https://github.com/guiyoung2',
-  },
-  {
-    icon: BookOpen,
-    // href: 'https://www.inflearn.com/users/432199/@gymcoding',
-    href: 'https://www.inflearn.com',
   },
   {
     icon: Instagram,
