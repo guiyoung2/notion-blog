@@ -36,7 +36,8 @@ export default function ProfileSection() {
                   alt="개발자 프로필 이미지"
                   width={144}
                   height={144}
-                  className="object-cover"
+                  loading="eager"
+                  className="h-36 w-36 object-cover"
                 />
               </div>
             </div>
