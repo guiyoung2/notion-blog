@@ -131,9 +131,14 @@ export const getPublishedPosts = unstable_cache(
       start_cursor: startCursor,
     });
 
-    const posts = response.results
+    const allPosts = response.results
       .filter((page): page is PageObjectResponse => 'properties' in page)
       .map(getPostMetadata);
+
+    const posts =
+      !tag || tag === '전체'
+        ? allPosts
+        : allPosts.filter((post) => post.tags?.includes(tag));
 
     return {
       posts,
@@ -141,7 +146,7 @@ export const getPublishedPosts = unstable_cache(
       nextCursor: response.next_cursor,
     };
   },
-  undefined,
+  ['posts'],
   {
     tags: ['posts'],
   }

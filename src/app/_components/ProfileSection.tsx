@@ -1,13 +1,9 @@
-import { Youtube, Github, Instagram } from 'lucide-react';
+import { Github, Instagram } from 'lucide-react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 const socialLinks = [
-  {
-    icon: Youtube,
-    href: 'https://www.youtube.com',
-  },
   {
     icon: Github,
     href: 'https://github.com/guiyoung2',

@@ -48,7 +48,7 @@ export function PostCard({ post, isFirst = false }: PostCardProps) {
             {post.description}
           </p>
         )}
-        <div className="text-muted-foreground mt-6 flex items-center gap-x-4 text-sm">
+        {/* <div className="text-muted-foreground mt-6 flex items-center gap-x-4 text-sm">
           {post.author && (
             <div className="flex items-center gap-1.5">
               <User className="h-4 w-4" />
@@ -61,7 +61,7 @@ export function PostCard({ post, isFirst = false }: PostCardProps) {
               <time>{formatDate(post.date)}</time>
             </div>
           )}
-        </div>
+        </div> */}
       </CardContent>
     </Card>
   );
