@@ -25,7 +25,7 @@ interface TocEntry {
 
 type Toc = Array<TocEntry>;
 
-export const generateMetadata = async () => {
+export const generateStaticParams = async () => {
   const { posts } = await getPublishedPosts();
   return posts.map((post) => ({
     slug: post.slug,
