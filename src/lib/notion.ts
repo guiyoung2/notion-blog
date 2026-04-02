@@ -10,23 +10,25 @@ export const notion = new Client({
   auth: process.env.NOTION_TOKEN,
 });
 
-const n2m = new NotionToMarkdown({ notionClient: notion });
+const n2m = new NotionToMarkdown({
+  notionClient: notion,
+  config: { parseChildPages: false },
+});
+
+function getCoverImage(cover: PageObjectResponse['cover']): string {
+  if (!cover) return '';
+  switch (cover.type) {
+    case 'external':
+      return cover.external.url;
+    case 'file':
+      return cover.file.url;
+    default:
+      return '';
+  }
+}
 
 function getPostMetadata(page: PageObjectResponse): Post {
   const { properties } = page;
-
-  const getCoverImage = (cover: PageObjectResponse['cover']) => {
-    if (!cover) return '';
-
-    switch (cover.type) {
-      case 'external':
-        return cover.external.url;
-      case 'file':
-        return cover.file.url;
-      default:
-        return '';
-    }
-  };
 
   return {
     id: page.id,
@@ -53,6 +55,28 @@ function getPostMetadata(page: PageObjectResponse): Post {
   };
 }
 
+async function getChildPageLinks(pageId: string): Promise<string> {
+  const blocks = await notion.blocks.children.list({ block_id: pageId });
+  const links = blocks.results
+    .filter(
+      (block): block is Extract<(typeof blocks.results)[number], { type: 'child_page' }> =>
+        'type' in block && block.type === 'child_page'
+    )
+    .map((block) => `[📄 ${block.child_page.title}](/blog/${block.id})`);
+
+  return links.join('\n\n');
+}
+
+async function buildPageMarkdown(pageId: string): Promise<string> {
+  const [mdblocks, childPageLinks] = await Promise.all([
+    n2m.pageToMarkdown(pageId),
+    getChildPageLinks(pageId),
+  ]);
+
+  const { parent } = n2m.toMarkdownString(mdblocks);
+  return [parent, childPageLinks].filter(Boolean).join('\n\n');
+}
+
 export const getPostBySlug = async (
   slug: string
 ): Promise<{ markdown: string; post: Post | null }> => {
@@ -76,22 +100,50 @@ export const getPostBySlug = async (
     },
   });
 
-  if (!response.results[0]) {
+  if (response.results[0]) {
+    const pageId = response.results[0].id;
+    const markdown = await buildPageMarkdown(pageId);
+
     return {
-      markdown: '',
-      post: null,
+      markdown,
+      post: getPostMetadata(response.results[0] as PageObjectResponse),
     };
   }
 
-  const mdblocks = await n2m.pageToMarkdown(response.results[0].id);
-  const { parent } = n2m.toMarkdownString(mdblocks);
-
-  return {
-    markdown: parent,
-    post: getPostMetadata(response.results[0] as PageObjectResponse),
-  };
-  // return mapPageToPost(response);
+  // 폴백: slug가 하위 페이지의 page ID인 경우
+  return getChildPage(slug);
 };
+
+async function getChildPage(
+  pageId: string
+): Promise<{ markdown: string; post: Post | null }> {
+  try {
+    const page = (await notion.pages.retrieve({ page_id: pageId })) as PageObjectResponse;
+    const parent = await buildPageMarkdown(pageId);
+
+    // 하위 페이지의 title 프로퍼티 추출
+    const titleProp = Object.values(page.properties).find((p) => p.type === 'title');
+    const title =
+      titleProp?.type === 'title' ? (titleProp.title[0]?.plain_text ?? '제목 없음') : '제목 없음';
+
+    return {
+      markdown: parent,
+      post: {
+        id: page.id,
+        title,
+        description: '',
+        coverImage: getCoverImage(page.cover),
+        tags: [],
+        author: '',
+        date: page.created_time,
+        modifiedDate: page.last_edited_time,
+        slug: page.id,
+      },
+    };
+  } catch {
+    return { markdown: '', post: null };
+  }
+}
 
 export interface GetPublishedPostsParams {
   tag?: string;

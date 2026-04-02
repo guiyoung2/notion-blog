@@ -8,6 +8,7 @@ import { MDXRemote } from 'next-mdx-remote/rsc';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
 import rehypePrettyCode from 'rehype-pretty-code';
+import { ChildPageLink } from '@/components/features/blog/ChildPageCard';
 import { compile } from '@mdx-js/mdx';
 import withSlugs from 'rehype-slug';
 import withToc from '@stefanprobst/rehype-extract-toc';
@@ -116,7 +117,7 @@ export default async function BlogPost({ params }: BlogPostProps) {
     <div className="container py-6 md:py-8 lg:py-12">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-[240px_1fr_240px] md:gap-8">
         <aside className="hidden md:block">{/* 추후 콘텐츠 추가 */}</aside>
-        <section className="overflow-hidden">
+        <section className="min-w-0">
           {/* 블로그 헤더 */}
           <div className="space-y-4">
             <div className="space-y-2">
@@ -129,7 +130,7 @@ export default async function BlogPost({ params }: BlogPostProps) {
             </div>
 
             {/* 메타 정보 */}
-            <div className="text-muted-foreground flex gap-4 text-sm">
+            {/* <div className="text-muted-foreground flex gap-4 text-sm">
               <div className="flex items-center gap-1">
                 <User className="h-4 w-4" />
                 <span>{post.author}</span>
@@ -138,7 +139,7 @@ export default async function BlogPost({ params }: BlogPostProps) {
                 <CalendarDays className="h-4 w-4" />
                 <span>{formatDate(post.date)}</span>
               </div>
-            </div>
+            </div> */}
           </div>
 
           <Separator className="my-8" />
@@ -159,6 +160,7 @@ export default async function BlogPost({ params }: BlogPostProps) {
           <div className="prose prose-neutral dark:prose-invert prose-headings:scroll-mt-(--header-height) max-w-none">
             <MDXRemote
               source={markdown}
+              components={{ a: ChildPageLink }}
               options={{
                 mdxOptions: {
                   remarkPlugins: [remarkGfm],
