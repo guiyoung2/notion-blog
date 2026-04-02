@@ -39,6 +39,9 @@ export const metadata: Metadata = {
     description: 'guiyoung의 개발 블로그',
     images: ['/thumbnail.jpg'],
   },
+  other: {
+    google: 'notranslate',
+  },
 };
 
 export default function RootLayout({
