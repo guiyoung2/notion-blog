@@ -150,6 +150,48 @@ export interface GetPublishedPostsParams {
   sort?: string;
   pageSize?: number;
   startCursor?: string;
+  /** 제목·Description에 대한 Notion contains 검색 (공백만 있으면 무시) */
+  query?: string;
+}
+
+/** Published 글만 대상으로, 선택 시 제목 또는 요약에 키워드가 포함된 페이지만 조회 */
+function buildPublishedPostsFilter(query?: string) {
+  const q = query?.trim();
+  if (!q) {
+    return {
+      property: 'Status',
+      select: {
+        equals: 'Published',
+      },
+    };
+  }
+
+  return {
+    and: [
+      {
+        property: 'Status',
+        select: {
+          equals: 'Published',
+        },
+      },
+      {
+        or: [
+          {
+            property: 'Title',
+            title: {
+              contains: q,
+            },
+          },
+          {
+            property: 'Description',
+            rich_text: {
+              contains: q,
+            },
+          },
+        ],
+      },
+    ],
+  };
 }
 
 export interface GetPublishedPostsResponse {
@@ -166,18 +208,21 @@ export const POSTS_LOAD_MORE_PAGE_SIZE = 3;
 export async function getPublishedPosts(
   params: GetPublishedPostsParams = {}
 ): Promise<GetPublishedPostsResponse> {
-  const { tag = '전체', sort = 'latest', pageSize = POSTS_INITIAL_PAGE_SIZE, startCursor } = params;
+  const {
+    tag = '전체',
+    sort = 'latest',
+    pageSize = POSTS_INITIAL_PAGE_SIZE,
+    startCursor,
+    query,
+  } = params;
+
+  const queryKeyPart = query?.trim() ?? '';
 
   return unstable_cache(
     async () => {
       const response = await notion.dataSources.query({
         data_source_id: process.env.NOTION_DATA_SOURCE_ID!,
-        filter: {
-          property: 'Status',
-          select: {
-            equals: 'Published',
-          },
-        },
+        filter: buildPublishedPostsFilter(query),
         sorts: [
           {
             property: 'Date',
@@ -203,7 +248,7 @@ export async function getPublishedPosts(
         nextCursor: response.next_cursor,
       };
     },
-    ['posts', tag, sort, String(pageSize), startCursor ?? ''],
+    ['posts', tag, sort, String(pageSize), startCursor ?? '', queryKeyPart],
     { tags: ['posts'] }
   )();
 }

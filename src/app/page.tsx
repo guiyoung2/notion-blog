@@ -9,19 +9,21 @@ import PostListSkeleton from '@/components/features/blog/PostListSkeleton';
 import TagSectionSkeleton from '@/app/_components/TagSectionSkeleton';
 
 interface HomeProps {
-  searchParams: Promise<{ tag?: string; sort?: string }>;
+  searchParams: Promise<{ tag?: string; sort?: string; q?: string }>;
 }
 
 export default async function Home({ searchParams }: HomeProps) {
-  const { tag, sort } = await searchParams;
+  const { tag, sort, q } = await searchParams;
   const selectedTag = tag || '전체';
   const selectedSort = sort || 'latest';
+  const searchQuery = typeof q === 'string' ? q : '';
 
   const tags = getTags();
   const postsPromise = getPublishedPosts({
     tag: selectedTag,
     sort: selectedSort,
     pageSize: POSTS_INITIAL_PAGE_SIZE,
+    query: searchQuery.trim() || undefined,
   });
   return (
     <div className="container py-8">
@@ -34,7 +36,7 @@ export default async function Home({ searchParams }: HomeProps) {
         </aside>
         <div className="order-3 space-y-8 md:order-none">
           {/* 섹션 제목 */}
-          <HeaderSection selectedTag={selectedTag} />
+          <HeaderSection selectedTag={selectedTag} searchQuery={searchQuery} />
           {/* 블로그 카드 그리드 */}
           <Suspense fallback={<PostListSkeleton />}>
             <PostListSuspense postsPromise={postsPromise} />
