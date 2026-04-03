@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { PostCard } from '@/components/features/blog/PostCard';
 import { Loader2 } from 'lucide-react';
-import { GetPublishedPostsResponse } from '@/lib/notion';
+import { GetPublishedPostsResponse, POSTS_LOAD_MORE_PAGE_SIZE } from '@/lib/notion';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import { use, useEffect } from 'react';
@@ -18,13 +18,12 @@ export default function PostList({ postsPromise }: PostListProps) {
   const searchParams = useSearchParams();
   const tag = searchParams.get('tag');
   const sort = searchParams.get('sort');
-  const pageSize = 2;
 
   const fetchPosts = async ({ pageParam }: { pageParam: string | undefined }) => {
     const params = new URLSearchParams();
     if (tag) params.set('tag', tag);
     if (sort) params.set('sort', sort);
-    params.set('pageSize', '3');
+    params.set('pageSize', String(POSTS_LOAD_MORE_PAGE_SIZE));
     if (pageParam) params.set('startCursor', pageParam);
 
     const response = await fetch(`/api/posts?${params.toString()}`);
@@ -35,7 +34,7 @@ export default function PostList({ postsPromise }: PostListProps) {
   };
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ['posts', tag, sort, pageSize],
+    queryKey: ['posts', tag, sort, 'infinite', POSTS_LOAD_MORE_PAGE_SIZE],
     queryFn: fetchPosts,
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,

@@ -1,6 +1,6 @@
 import ProfileSection from '@/app/_components/ProfileSection';
 import ContactSection from '@/app/_components/ContactSection';
-import { getTags, getPublishedPosts } from '@/lib/notion';
+import { getTags, getPublishedPosts, POSTS_INITIAL_PAGE_SIZE } from '@/lib/notion';
 import HeaderSection from '@/app/_components/HeaderSection';
 import PostListSuspense from '@/components/features/blog/PostListSuspense';
 import { Suspense } from 'react';
@@ -18,7 +18,11 @@ export default async function Home({ searchParams }: HomeProps) {
   const selectedSort = sort || 'latest';
 
   const tags = getTags();
-  const postsPromise = getPublishedPosts({ tag: selectedTag, sort: selectedSort });
+  const postsPromise = getPublishedPosts({
+    tag: selectedTag,
+    sort: selectedSort,
+    pageSize: POSTS_INITIAL_PAGE_SIZE,
+  });
   return (
     <div className="container py-8">
       <div className="grid-cold-1 grid gap-6 md:grid-cols-[200px_1fr_220px]">

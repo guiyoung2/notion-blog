@@ -158,51 +158,55 @@ export interface GetPublishedPostsResponse {
   nextCursor: string | null;
 }
 
-export const getPublishedPosts = unstable_cache(
-  async ({
-    tag = '전체',
-    sort = 'latest',
-    pageSize = 4,
-    startCursor,
-  }: GetPublishedPostsParams = {}): Promise<GetPublishedPostsResponse> => {
-    const response = await notion.dataSources.query({
-      data_source_id: process.env.NOTION_DATA_SOURCE_ID!,
-      filter: {
-        property: 'Status',
-        select: {
-          equals: 'Published',
+/** 홈 첫 화면(SSR)에서 가져오는 게시글 개수 */
+export const POSTS_INITIAL_PAGE_SIZE = 4;
+/** 무한 스크롤로 추가 로드할 때마다 가져오는 게시글 개수 */
+export const POSTS_LOAD_MORE_PAGE_SIZE = 3;
+
+export async function getPublishedPosts(
+  params: GetPublishedPostsParams = {}
+): Promise<GetPublishedPostsResponse> {
+  const { tag = '전체', sort = 'latest', pageSize = POSTS_INITIAL_PAGE_SIZE, startCursor } = params;
+
+  return unstable_cache(
+    async () => {
+      const response = await notion.dataSources.query({
+        data_source_id: process.env.NOTION_DATA_SOURCE_ID!,
+        filter: {
+          property: 'Status',
+          select: {
+            equals: 'Published',
+          },
         },
-      },
-      sorts: [
-        {
-          property: 'Date',
-          direction: sort === 'latest' ? 'descending' : 'ascending',
-        },
-      ],
-      page_size: pageSize,
-      start_cursor: startCursor,
-    });
+        sorts: [
+          {
+            property: 'Date',
+            direction: sort === 'latest' ? 'descending' : 'ascending',
+          },
+        ],
+        page_size: pageSize,
+        start_cursor: startCursor,
+      });
 
-    const allPosts = response.results
-      .filter((page): page is PageObjectResponse => 'properties' in page)
-      .map(getPostMetadata);
+      const allPosts = response.results
+        .filter((page): page is PageObjectResponse => 'properties' in page)
+        .map(getPostMetadata);
 
-    const posts =
-      !tag || tag === '전체'
-        ? allPosts
-        : allPosts.filter((post) => post.tags?.includes(tag));
+      const posts =
+        !tag || tag === '전체'
+          ? allPosts
+          : allPosts.filter((post) => post.tags?.includes(tag));
 
-    return {
-      posts,
-      hasMore: response.has_more,
-      nextCursor: response.next_cursor,
-    };
-  },
-  ['posts'],
-  {
-    tags: ['posts'],
-  }
-);
+      return {
+        posts,
+        hasMore: response.has_more,
+        nextCursor: response.next_cursor,
+      };
+    },
+    ['posts', tag, sort, String(pageSize), startCursor ?? ''],
+    { tags: ['posts'] }
+  )();
+}
 
 export const getTags = async (): Promise<TagFilterItem[]> => {
   const { posts } = await getPublishedPosts({ pageSize: 100 });
