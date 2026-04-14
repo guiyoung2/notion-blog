@@ -249,7 +249,7 @@ export async function getPublishedPosts(
       };
     },
     ['posts', tag, sort, String(pageSize), startCursor ?? '', queryKeyPart],
-    { tags: ['posts'] }
+    { tags: ['posts'], revalidate: 900 }
   )();
 }
 

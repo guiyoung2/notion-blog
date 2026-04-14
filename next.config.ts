@@ -1,6 +1,5 @@
 import type { NextConfig } from 'next';
 import createMDX from '@next/mdx';
-import remarkGfm from 'remark-gfm';
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -18,6 +17,12 @@ const nextConfig: NextConfig = {
       },
       {
         hostname: 'www.notion.so',
+      },
+      {
+        hostname: 'app.notion.com',
+      },
+      {
+        hostname: 'secure.notion-static.com',
       },
     ],
   },

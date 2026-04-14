@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react';
 import { GetPublishedPostsResponse, POSTS_LOAD_MORE_PAGE_SIZE } from '@/lib/notion';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
-import { use, useEffect } from 'react';
+import { use, useEffect, useMemo } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 interface PostListProps {
@@ -61,12 +61,20 @@ export default function PostList({ postsPromise }: PostListProps) {
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const allPosts = data?.pages.flatMap((page) => page.posts) ?? [];
+  const uniquePosts = useMemo(() => {
+    const allPosts = data?.pages.flatMap((page) => page.posts) ?? [];
+    const seen = new Set<string>();
+    return allPosts.filter((post) => {
+      if (seen.has(post.id)) return false;
+      seen.add(post.id);
+      return true;
+    });
+  }, [data?.pages]);
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4">
-        {allPosts.map((post, index) => (
+        {uniquePosts.map((post, index) => (
           <Link href={`/blog/${post.slug}`} key={post.id}>
             {/* 검색 중에는 priority preload를 사용하지 않아 불일치 경고 방지 */}
             <PostCard post={post} isFirst={index === 0 && !q} />
