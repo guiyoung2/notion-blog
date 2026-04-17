@@ -114,9 +114,7 @@ export const getPostBySlug = async (
   return getChildPage(slug);
 };
 
-async function getChildPage(
-  pageId: string
-): Promise<{ markdown: string; post: Post | null }> {
+async function getChildPage(pageId: string): Promise<{ markdown: string; post: Post | null }> {
   try {
     const page = (await notion.pages.retrieve({ page_id: pageId })) as PageObjectResponse;
     const parent = await buildPageMarkdown(pageId);
@@ -238,9 +236,7 @@ export async function getPublishedPosts(
         .map(getPostMetadata);
 
       const posts =
-        !tag || tag === '전체'
-          ? allPosts
-          : allPosts.filter((post) => post.tags?.includes(tag));
+        !tag || tag === '전체' ? allPosts : allPosts.filter((post) => post.tags?.includes(tag));
 
       return {
         posts,
@@ -249,7 +245,7 @@ export async function getPublishedPosts(
       };
     },
     ['posts', tag, sort, String(pageSize), startCursor ?? '', queryKeyPart],
-    { tags: ['posts'], revalidate: 900 }
+    { tags: ['posts'], revalidate: 300 } // 5분마다 자동 재검증 (ISR)
   )();
 }
 
