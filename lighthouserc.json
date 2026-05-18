@@ -3,8 +3,7 @@
     "collect": {
       "url": [
         "https://notion-blog-rose-phi.vercel.app/",
-        "https://notion-blog-rose-phi.vercel.app/blog",
-        "https://notion-blog-rose-phi.vercel.app/about"
+        "https://notion-blog-rose-phi.vercel.app/blog"
       ],
       "numberOfRuns": 3,
       "settings": {
