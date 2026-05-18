@@ -11,8 +11,8 @@ export default function PostList() {
   useEffect(() => {
     const fetchPosts = async () => {
       const res = await fetch('/api/posts');
-      const data = await res.json();
-      setPosts(data);
+      const data = (await res.json()) as { posts: Post[] };
+      setPosts(data.posts ?? []);
     };
     fetchPosts();
   }, []);
