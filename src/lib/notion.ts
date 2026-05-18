@@ -80,38 +80,44 @@ async function buildPageMarkdown(pageId: string): Promise<string> {
 export const getPostBySlug = async (
   slug: string
 ): Promise<{ markdown: string; post: Post | null }> => {
-  const response = await notion.dataSources.query({
-    data_source_id: process.env.NOTION_DATA_SOURCE_ID!,
-    filter: {
-      and: [
-        {
-          property: 'Slug',
-          rich_text: {
-            equals: slug,
-          },
+  return unstable_cache(
+    async () => {
+      const response = await notion.dataSources.query({
+        data_source_id: process.env.NOTION_DATA_SOURCE_ID!,
+        filter: {
+          and: [
+            {
+              property: 'Slug',
+              rich_text: {
+                equals: slug,
+              },
+            },
+            {
+              property: 'Status',
+              select: {
+                equals: 'Published',
+              },
+            },
+          ],
         },
-        {
-          property: 'Status',
-          select: {
-            equals: 'Published',
-          },
-        },
-      ],
+      });
+
+      if (response.results[0]) {
+        const pageId = response.results[0].id;
+        const markdown = await buildPageMarkdown(pageId);
+
+        return {
+          markdown,
+          post: getPostMetadata(response.results[0] as PageObjectResponse),
+        };
+      }
+
+      // 폴백: slug가 하위 페이지의 page ID인 경우
+      return getChildPage(slug);
     },
-  });
-
-  if (response.results[0]) {
-    const pageId = response.results[0].id;
-    const markdown = await buildPageMarkdown(pageId);
-
-    return {
-      markdown,
-      post: getPostMetadata(response.results[0] as PageObjectResponse),
-    };
-  }
-
-  // 폴백: slug가 하위 페이지의 page ID인 경우
-  return getChildPage(slug);
+    ['post', slug],
+    { tags: ['post', slug], revalidate: 300 }
+  )();
 };
 
 async function getChildPage(pageId: string): Promise<{ markdown: string; post: Post | null }> {
