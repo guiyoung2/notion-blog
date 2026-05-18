@@ -65,7 +65,7 @@ describe('createPostAction', () => {
   });
 
   it('유효한 입력 시 createPost 호출 및 redirect("/") 실행', async () => {
-    vi.mocked(createPost).mockResolvedValueOnce(undefined as never);
+    vi.mocked(createPost).mockResolvedValueOnce({ id: 'test-page-id' } as never);
 
     await createPostAction(
       initialState,

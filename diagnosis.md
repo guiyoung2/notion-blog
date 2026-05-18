@@ -188,3 +188,97 @@ Notion 마크다운 문자열
 | /blog/vibeboard-refactor | 99 | 96 | 100 | 100 | 917 ms | 1967 ms | 19 ms | 0.000 |
 
 _점수는 0–100, 시간은 ms, CLS는 단위 없음_
+
+---
+
+## 5. 측정 결과 (after)
+
+> 측정일: 2026-05-19  
+> 빌드 도구: Next.js 16.1.7 (Turbopack)  
+> 명령어: `pnpm build`, `pnpm test:cov`
+
+### 5-1. before/after 비교 요약
+
+| 항목 | before | after | 변화 |
+|------|--------|-------|------|
+| 번들 크기 (Turbopack JS 합계) | 851.6 KB | 850.5 KB | -1.1 KB (무변화) |
+| CSS | 68.0 KB | 68.0 KB | 동일 |
+| 테스트 수 | 0 | 27 (6파일) | **+27** |
+| 커버리지 (statements) | 0% | 23.29% | **+23.29%** |
+| 커버리지 (branches) | 0% | 18.62% | **+18.62%** |
+| 커버리지 (functions) | 0% | 19.35% | **+19.35%** |
+| 커버리지 (lines) | 0% | 24.02% | **+24.02%** |
+| CI | 있음 | 있음 | 유지 |
+
+> **헤드라인**: 번들 크기 변화는 없다 — 리팩토링이 서버 사이드 로직 위주였기 때문. 측정 가능한 개선은 **테스트 0→27개, 커버리지 0%→23%** 다.
+
+### 5-2. 빌드 결과 (after)
+
+**상태: 성공 ✅** (`npx tsc -b` 타입 에러 0)
+
+```
+▲ Next.js 16.1.7 (Turbopack)
+✓ Compiled successfully in 3.1s
+✓ Generating static pages (11/11) in 6.5s
+```
+
+라우트 구조는 before와 동일 (변경 없음).
+
+### 5-3. 정적 청크 크기 (after)
+
+| 파일 | 크기 (KB) |
+|------|-----------|
+| e1a5c20e8e8c41fe.js | 219.2 |
+| 9eafa679edfdc379.js | 214.9 |
+| a6dad97d9634a72d.js | 110.0 |
+| 0279fb07d1f33ce8.js | 82.8 |
+| 9b919d2e2445a241.js | 45.7 |
+| 8290103a1e595e39.js | 37.6 |
+| 4ff6a0359b505131.js | 32.5 |
+| b70543e624032cdf.js | 28.0 |
+| 44fd8305b698a736.js | 26.5 |
+| 922b40ef6e5ae034.js | 18.7 |
+| 2571bb0f72f68691.js | 10.1 |
+| turbopack-937b6ddce6547ea1.js | 10.0 |
+| 9cef47ee1d7af715.js | 8.1 |
+| 6766510215e7001b.js | 3.8 |
+| a0f3305eb3557ea6.js | 1.6 |
+| 57ccf87f2a53a249.js | 1.1 |
+| **합계 JS** | **850.5 KB** |
+| 71f45061d21718f2.css | 68.0 KB |
+
+> before(851.6 KB) 대비 -1.1 KB. 청크 파일명과 수는 동일 — 서버 사이드 리팩토링은 클라이언트 번들에 영향을 주지 않는다.
+
+### 5-4. 테스트 커버리지 (after)
+
+**테스트 파일 6개, 27개 테스트 — 전부 통과 ✅**
+
+| 파일 | 역할 |
+|------|------|
+| `src/lib/__tests__/date.test.ts` | 날짜 포맷 유틸 |
+| `src/app/api/posts/__tests__/route.test.ts` | 포스트 목록 Route Handler |
+| `src/app/_components/__tests__/BlogSearch.test.tsx` | 블로그 검색 컴포넌트 |
+| `src/app/_components/__tests__/SortSelect.test.tsx` | 정렬 Select 컴포넌트 |
+| `src/components/features/blog/__tests__/PostCard.test.tsx` | 포스트 카드 컴포넌트 |
+| `src/app/actions/__tests__/blog.test.ts` | 서버 액션 (createPostAction) |
+
+**전체 커버리지**
+
+| 지표 | before | after |
+|------|--------|-------|
+| Statements | 0% (0/0) | 23.29% (75/322) |
+| Branches | 0% | 18.62% (38/204) |
+| Functions | 0% | 19.35% (24/124) |
+| Lines | 0% | 24.02% (74/308) |
+
+**주요 파일별 커버리지**
+
+| 파일 | Stmts | Branch | Funcs | Lines |
+|------|-------|--------|-------|-------|
+| `app/_components/` (전체) | 55.31% | 42.85% | 35.29% | 55.31% |
+| `components/ui/badge.tsx` | 100% | 75% | 100% | 100% |
+| `components/ui/button.tsx` | 100% | 80% | 100% | 100% |
+| `components/ui/select.tsx` | 72.72% | 71.42% | 70% | 72.72% |
+| `lib/notion.ts` | 0% | 0% | 0% | 0% |
+
+> **비고**: `lib/notion.ts`(Notion API 직접 호출)는 외부 의존성이므로 단위 테스트 대상 제외. `app/actions/blog.ts`는 `'use server'` 디렉티브로 인해 v8 커버리지 테이블에 별도 표시되지 않으나 5개 테스트가 실제로 검증함.
