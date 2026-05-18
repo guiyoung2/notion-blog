@@ -1,9 +1,7 @@
 import Link from 'next/link';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, User } from 'lucide-react';
 import { getPostBySlug } from '@/lib/notion';
-import { formatDate } from '@/lib/date';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import remarkGfm from 'remark-gfm';
 import rehypeSanitize from 'rehype-sanitize';
@@ -13,7 +11,6 @@ import { compile } from '@mdx-js/mdx';
 import withSlugs from 'rehype-slug';
 import withToc from '@stefanprobst/rehype-extract-toc';
 import withTocExport from '@stefanprobst/rehype-extract-toc/mdx';
-import GiscusComments from '@/components/GiscusComments';
 import { notFound } from 'next/navigation';
 import { getPublishedPosts } from '@/lib/notion';
 import { Metadata } from 'next';

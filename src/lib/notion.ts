@@ -80,38 +80,44 @@ async function buildPageMarkdown(pageId: string): Promise<string> {
 export const getPostBySlug = async (
   slug: string
 ): Promise<{ markdown: string; post: Post | null }> => {
-  const response = await notion.dataSources.query({
-    data_source_id: process.env.NOTION_DATA_SOURCE_ID!,
-    filter: {
-      and: [
-        {
-          property: 'Slug',
-          rich_text: {
-            equals: slug,
-          },
+  return unstable_cache(
+    async () => {
+      const response = await notion.dataSources.query({
+        data_source_id: process.env.NOTION_DATA_SOURCE_ID!,
+        filter: {
+          and: [
+            {
+              property: 'Slug',
+              rich_text: {
+                equals: slug,
+              },
+            },
+            {
+              property: 'Status',
+              select: {
+                equals: 'Published',
+              },
+            },
+          ],
         },
-        {
-          property: 'Status',
-          select: {
-            equals: 'Published',
-          },
-        },
-      ],
+      });
+
+      if (response.results[0]) {
+        const pageId = response.results[0].id;
+        const markdown = await buildPageMarkdown(pageId);
+
+        return {
+          markdown,
+          post: getPostMetadata(response.results[0] as PageObjectResponse),
+        };
+      }
+
+      // 폴백: slug가 하위 페이지의 page ID인 경우
+      return getChildPage(slug);
     },
-  });
-
-  if (response.results[0]) {
-    const pageId = response.results[0].id;
-    const markdown = await buildPageMarkdown(pageId);
-
-    return {
-      markdown,
-      post: getPostMetadata(response.results[0] as PageObjectResponse),
-    };
-  }
-
-  // 폴백: slug가 하위 페이지의 page ID인 경우
-  return getChildPage(slug);
+    ['post', slug],
+    { tags: ['post', slug], revalidate: 300 }
+  )();
 };
 
 async function getChildPage(pageId: string): Promise<{ markdown: string; post: Post | null }> {
@@ -152,10 +158,12 @@ export interface GetPublishedPostsParams {
   query?: string;
 }
 
-/** Published 글만 대상으로, 선택 시 제목 또는 요약에 키워드가 포함된 페이지만 조회 */
-function buildPublishedPostsFilter(query?: string) {
+/** Published 글만 대상으로, 선택 시 태그·키워드 조건을 Notion API filter로 적용 */
+function buildPublishedPostsFilter(query?: string, tag?: string) {
   const q = query?.trim();
-  if (!q) {
+  const hasTag = tag && tag !== '전체';
+
+  if (!q && !hasTag) {
     return {
       property: 'Status',
       select: {
@@ -172,22 +180,36 @@ function buildPublishedPostsFilter(query?: string) {
           equals: 'Published',
         },
       },
-      {
-        or: [
-          {
-            property: 'Title',
-            title: {
-              contains: q,
+      ...(q
+        ? [
+            {
+              or: [
+                {
+                  property: 'Title',
+                  title: {
+                    contains: q,
+                  },
+                },
+                {
+                  property: 'Description',
+                  rich_text: {
+                    contains: q,
+                  },
+                },
+              ],
             },
-          },
-          {
-            property: 'Description',
-            rich_text: {
-              contains: q,
+          ]
+        : []),
+      ...(hasTag
+        ? [
+            {
+              property: 'Tags',
+              multi_select: {
+                contains: tag,
+              },
             },
-          },
-        ],
-      },
+          ]
+        : []),
     ],
   };
 }
@@ -220,7 +242,7 @@ export async function getPublishedPosts(
     async () => {
       const response = await notion.dataSources.query({
         data_source_id: process.env.NOTION_DATA_SOURCE_ID!,
-        filter: buildPublishedPostsFilter(query),
+        filter: buildPublishedPostsFilter(query, tag),
         sorts: [
           {
             property: 'Date',
@@ -231,12 +253,9 @@ export async function getPublishedPosts(
         start_cursor: startCursor,
       });
 
-      const allPosts = response.results
+      const posts = response.results
         .filter((page): page is PageObjectResponse => 'properties' in page)
         .map(getPostMetadata);
-
-      const posts =
-        !tag || tag === '전체' ? allPosts : allPosts.filter((post) => post.tags?.includes(tag));
 
       return {
         posts,

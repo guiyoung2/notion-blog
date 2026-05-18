@@ -52,5 +52,8 @@ lighthouserc.generated.json
 # improvement
 개선사항.md
 
+# resume draft (개인 문서 — 커밋 제외)
+resume-notion-blog-draft.md
+
 # claude (하네스·런타임·로컬 설정 — 개인 작업용, 커밋 제외)
 .claude/

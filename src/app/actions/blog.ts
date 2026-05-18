@@ -2,9 +2,8 @@
 
 import { createPost } from '@/lib/notion';
 import { z } from 'zod';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { revalidateTag, updateTag } from 'next/cache';
 
 const postSchema = z.object({
   title: z.string().min(1, { message: '제목을 입력해주세요.' }),
@@ -29,7 +28,7 @@ export interface PostFormState {
   success?: boolean;
 }
 
-export async function createPostAction(prevState: PostFormState, formData: FormData) {
+export async function createPostAction(prevState: PostFormState, formData: FormData): Promise<PostFormState> {
   // const title = formData.get('title') as string;
   // const tag = formData.get('tag') as string;
   // const content = formData.get('content') as string;
@@ -54,24 +53,24 @@ export async function createPostAction(prevState: PostFormState, formData: FormD
   try {
     const { title, tag, content } = validatedFields.data;
 
-    await createPost({
+    const created = await createPost({
       title: title,
       tag: tag,
       content: content,
     });
 
-    updateTag('posts');
-    return {
-      success: true,
-      message: '블로그 포스트가 성공적으로 생성되었습니다.',
-    };
+    // 목록 캐시 무효화
+    revalidateTag('posts', 'max');
+    // 상세 페이지 캐시 무효화 (step 1의 tags: ['post', slug]와 연동)
+    revalidateTag(created.id, 'max');
+    revalidatePath('/');
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error(err);
     return {
       message: '블로그 포스트 생성에 실패했습니다.',
       formData: rawFormDate,
     };
   }
-  // revalidatePath('/');
-  // redirect('/');
+  redirect('/');
 }
