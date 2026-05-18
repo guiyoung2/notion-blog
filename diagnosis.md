@@ -308,3 +308,39 @@ _점수는 0–100, 시간은 ms, CLS는 단위 없음_
 > **헤드라인**: 리팩토링 전후 Lighthouse 점수·Core Web Vitals 모두 변화 없음. 이번 리팩토링은 서버 사이드 캐시·태그 필터·데드 코드 정리가 주요 변경 범위였으므로 클라이언트 측 성능 지표에 영향을 주지 않는다. 수치 차이(LCP ±4ms, TBT ±2ms)는 측정 오차 범위 내다.
 
 _측정일: 2026-05-19 · 측정 환경: Lighthouse CI 헤드리스 Chrome, 모바일 에뮬레이션_
+
+---
+
+## 6. perf-review 판정
+
+> 판정일: 2026-05-19  
+> 기준: measure_before(4-6절) vs measure_after(5-5절) 실측값 비교
+
+### 6-1. 페이지별 임계값 통과/미달 표
+
+| 페이지 | 항목 | before | after | 임계값 | 판정 |
+|--------|------|--------|-------|--------|------|
+| `/` | CLS | 0.000 | 0.000 | < 0.1 | ✅ 통과 |
+| `/` | Performance | 98 | 98 | after ≥ before − 5 (≥93) | ✅ 통과 |
+| `/` | LCP | 2421 ms | 2425 ms | after ≤ before × 1.1 (≤2663 ms) | ✅ 통과 |
+| `/blog` | CLS | 0.059 | 0.059 | < 0.1 | ✅ 통과 |
+| `/blog` | Performance | 96 | 96 | after ≥ before − 5 (≥91) | ✅ 통과 |
+| `/blog` | LCP | 2642 ms | 2643 ms | after ≤ before × 1.1 (≤2906 ms) | ✅ 통과 |
+| `/blog/vibeboard-refactor` | CLS | 0.000 | 0.000 | < 0.1 | ✅ 통과 |
+| `/blog/vibeboard-refactor` | Performance | 99 | 99 | after ≥ before − 5 (≥94) | ✅ 통과 |
+| `/blog/vibeboard-refactor` | LCP | 1967 ms | 1967 ms | after ≤ before × 1.1 (≤2164 ms) | ✅ 통과 |
+
+### 6-2. 번들 크기 변화 (참고)
+
+| 항목 | before | after | 변화율 |
+|------|--------|-------|--------|
+| Turbopack JS 합계 | 851.6 KB | 850.5 KB | −0.1% (−1.1 KB) |
+
+> 임계값 판정 항목 아님. 서버 사이드 리팩토링 위주였으므로 클라이언트 번들 변화 없음은 정상.
+
+### 6-3. 최종 판정
+
+**✅ 전체 통과 — retry_required: false**
+
+9개 임계값 항목 전부 통과. 리팩토링으로 인한 성능 퇴행 없음.  
+`index.json`에 `"retry_required": false` 기록 완료.
