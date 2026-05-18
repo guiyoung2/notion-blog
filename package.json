@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "lint:fix": "next lint --fix",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "lighthouse": "node scripts/resolve-lighthouse-config.mjs && lhci collect --config=lighthouserc.generated.json && node scripts/lighthouse-report.mjs"
   },
   "dependencies": {
     "@giscus/react": "^3.1.0",
@@ -45,6 +46,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@lhci/cli": "^0.15.1",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^20",

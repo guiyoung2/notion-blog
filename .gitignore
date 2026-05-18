@@ -45,5 +45,12 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# lighthouse (측정 산출물·런타임 생성 config — 커밋 제외)
+.lighthouseci/
+lighthouserc.generated.json
+
 # improvement
 개선사항.md
+
+# claude (하네스·런타임·로컬 설정 — 개인 작업용, 커밋 제외)
+.claude/

@@ -1,0 +1,16 @@
+{
+  "ci": {
+    "collect": {
+      "url": [
+        "https://notion-blog-rose-phi.vercel.app/",
+        "https://notion-blog-rose-phi.vercel.app/blog",
+        "https://notion-blog-rose-phi.vercel.app/about"
+      ],
+      "numberOfRuns": 3,
+      "settings": {
+        "formFactor": "mobile",
+        "onlyCategories": ["performance", "accessibility", "best-practices", "seo"]
+      }
+    }
+  }
+}
