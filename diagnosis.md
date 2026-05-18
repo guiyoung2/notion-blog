@@ -78,8 +78,9 @@ Notion 마크다운 문자열
 ## 4. 측정 베이스라인 (before)
 
 > 측정일: 2026-05-18  
-> 빌드 도구: Next.js 16.1.7 (Turbopack)  
-> 명령어: `pnpm build`
+> 빌드 도구: Next.js 16.1.7 (Turbopack / Webpack)  
+> 명령어: `pnpm build` (Turbopack) / `ANALYZE=true pnpm build --webpack` (webpack 분석)  
+> 번들 분석: `@next/bundle-analyzer 16.2.6` 설치 완료 (`devDependencies`)
 
 ### 4-1. 빌드 결과
 
@@ -134,12 +135,40 @@ Notion 마크다운 문자열
 
 ### 4-4. `.next/` 디렉터리 크기
 
+#### Turbopack 빌드 기준
+
 | 디렉터리 | 크기 |
 |----------|------|
 | `.next/server/` | 17.19 MB |
 | `.next/static/` | 1.15 MB |
 | `.next/cache/` | 0.68 MB |
 | **`.next/` 총합** | **~20 MB** (파일 425개) |
+
+#### Webpack 빌드 기준 (`ANALYZE=true pnpm build --webpack`)
+
+| 파일 | 크기 (KB) |
+|------|-----------|
+| 626-55ee049b297524a6.js | 230.2 |
+| 171-9a555e2f56cd69a9.js | 223.2 |
+| 1f5bfe97-4e25e1fec3b883af.js | 193.1 |
+| framework-7ca788fefb4bbd3a.js | 185.0 |
+| 834-84ab6641fd667312.js | 183.3 |
+| main-8b76955b75e3381d.js | 125.2 |
+| polyfills-42372ed130431b0a.js | 109.1 |
+| 250-8e4c4cbf2ea027db.js | 27.4 |
+| app/layout-20aa15ed4a5e8101.js | 18.3 |
+| 748-b5c042337d16480a.js | 17.2 |
+| 기타 페이지·라우트 청크 | ~22 |
+| **합계 JS** | **~1,382 KB** |
+| 2fc5b98352addc7f.css | 65.9 KB |
+
+| 디렉터리 | 크기 |
+|----------|------|
+| `.next/server/` | 5.1 MB |
+| `.next/static/` | 1.7 MB |
+| **합계** | — |
+
+> **비고**: webpack 빌드는 `.next/analyze/client.html`, `nodejs.html`, `edge.html` 3개 리포트를 생성함 (`.next/` gitignore 대상 — 커밋 불포함). Turbopack 대비 JS 번들이 약 530 KB 더 크다 (1,382 KB vs 852 KB). Turbopack이 더 효율적인 트리셰이킹을 적용하기 때문.
 
 ### 4-5. 테스트 커버리지
 
