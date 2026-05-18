@@ -158,10 +158,12 @@ export interface GetPublishedPostsParams {
   query?: string;
 }
 
-/** Published 글만 대상으로, 선택 시 제목 또는 요약에 키워드가 포함된 페이지만 조회 */
-function buildPublishedPostsFilter(query?: string) {
+/** Published 글만 대상으로, 선택 시 태그·키워드 조건을 Notion API filter로 적용 */
+function buildPublishedPostsFilter(query?: string, tag?: string) {
   const q = query?.trim();
-  if (!q) {
+  const hasTag = tag && tag !== '전체';
+
+  if (!q && !hasTag) {
     return {
       property: 'Status',
       select: {
@@ -178,22 +180,36 @@ function buildPublishedPostsFilter(query?: string) {
           equals: 'Published',
         },
       },
-      {
-        or: [
-          {
-            property: 'Title',
-            title: {
-              contains: q,
+      ...(q
+        ? [
+            {
+              or: [
+                {
+                  property: 'Title',
+                  title: {
+                    contains: q,
+                  },
+                },
+                {
+                  property: 'Description',
+                  rich_text: {
+                    contains: q,
+                  },
+                },
+              ],
             },
-          },
-          {
-            property: 'Description',
-            rich_text: {
-              contains: q,
+          ]
+        : []),
+      ...(hasTag
+        ? [
+            {
+              property: 'Tags',
+              multi_select: {
+                contains: tag,
+              },
             },
-          },
-        ],
-      },
+          ]
+        : []),
     ],
   };
 }
@@ -226,7 +242,7 @@ export async function getPublishedPosts(
     async () => {
       const response = await notion.dataSources.query({
         data_source_id: process.env.NOTION_DATA_SOURCE_ID!,
-        filter: buildPublishedPostsFilter(query),
+        filter: buildPublishedPostsFilter(query, tag),
         sorts: [
           {
             property: 'Date',
@@ -237,12 +253,9 @@ export async function getPublishedPosts(
         start_cursor: startCursor,
       });
 
-      const allPosts = response.results
+      const posts = response.results
         .filter((page): page is PageObjectResponse => 'properties' in page)
         .map(getPostMetadata);
-
-      const posts =
-        !tag || tag === '전체' ? allPosts : allPosts.filter((post) => post.tags?.includes(tag));
 
       return {
         posts,
