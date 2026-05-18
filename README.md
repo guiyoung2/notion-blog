@@ -3,6 +3,8 @@
 > **Notion을 CMS처럼 활용해 기술 글을 발행**하고, 태그 필터링·무한 스크롤·동적 SEO·OG 이미지 자동화까지 갖춘 개인 블로그.
 > Notion API와 Next.js App Router 기반 CMS 패턴을 학습하기 위해 만든 프로젝트입니다.
 
+![CI](https://github.com/guiyoung2/notion-blog/actions/workflows/ci.yml/badge.svg)
+
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)

@@ -144,7 +144,7 @@ Notion 마크다운 문자열
 ### 4-5. 테스트 커버리지
 
 - **커버리지: 0%** — 테스트 파일 없음 (`*.test.*`, `*.spec.*` 파일 미존재)
-- **CI**: 없음 (`.github/workflows/` 미존재)
+- **CI**: 있음 (`.github/workflows/ci.yml` — lint·타입체크·테스트·빌드)
 
 ### 4-6. Lighthouse 기준선 (before)
 
