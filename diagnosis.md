@@ -72,3 +72,80 @@ Notion 마크다운 문자열
 | 8 | **TOC 이중 컴파일 제거** | `@mdx-js/mdx compile()` + `MDXRemote` 두 번 실행. 서버 렌더 성능 영향. | 중간 |
 | 9 | **ReactQueryDevtools 프로덕션 분리** | devtools가 프로덕션 번들에 포함될 수 있음. `process.env.NODE_ENV` 가드 추가 필요. | 낮음 |
 | 10 | **README 설치 명령어 수정** (`npm` → `pnpm`) | 문서 신뢰도. 면접/이력서 제출 전 최소한의 정리. | 낮음 |
+
+---
+
+## 4. 측정 베이스라인 (before)
+
+> 측정일: 2026-05-18  
+> 빌드 도구: Next.js 16.1.7 (Turbopack)  
+> 명령어: `pnpm build`
+
+### 4-1. 빌드 결과
+
+**상태: 성공 ✅**
+
+```
+▲ Next.js 16.1.7 (Turbopack)
+✓ Compiled successfully in 3.1s
+✓ Generating static pages (11/11) in 3.9s
+```
+
+### 4-2. 라우트 표
+
+| 라우트 | 타입 | Revalidate | Expire |
+|--------|------|-----------|--------|
+| `/` | ƒ Dynamic | — | — |
+| `/_not-found` | ○ Static | — | — |
+| `/api/posts` | ƒ Dynamic | — | — |
+| `/blog` | ○ Static | — | — |
+| `/blog/[slug]` (vibeboard-refactor) | ● SSG | 1m | 1y |
+| `/blog/[slug]` (logofreview-refactor) | ● SSG | 1m | 1y |
+| `/blog/[slug]` (claude-basic-commands) | ● SSG | 1m | 1y |
+| `/blog/[slug]` (claude-setting) | ● SSG | 1m | 1y |
+| `/blog/[slug]/opengraph-image` | ƒ Dynamic | — | — |
+| `/blog/write` | ○ Static | — | — |
+| `/docs/[[...slug]]` | ƒ Dynamic | — | — |
+
+> **비고**: Turbopack 빌드는 라우트별 First Load JS 크기 표를 출력하지 않는다(webpack 전용 기능). 청크별 크기는 아래 4-3절에서 직접 측정.
+
+### 4-3. 정적 청크 크기 (`.next/static/chunks/`)
+
+| 파일 | 크기 (KB) |
+|------|-----------|
+| e1a5c20e8e8c41fe.js | 219.2 |
+| 9eafa679edfdc379.js | 214.9 |
+| a6dad97d9634a72d.js | 110.0 |
+| 0279fb07d1f33ce8.js | 82.8 |
+| 9b919d2e2445a241.js | 45.7 |
+| 8290103a1e595e39.js | 37.6 |
+| 4ff6a0359b505131.js | 32.5 |
+| b70543e624032cdf.js | 28.0 |
+| 44fd8305b698a736.js | 26.5 |
+| 922b40ef6e5ae034.js | 18.7 |
+| 2571bb0f72f68691.js | 10.1 |
+| turbopack-937b6ddce6547ea1.js | 10.0 |
+| 9cef47ee1d7af715.js | 8.1 |
+| 6766510215e7001b.js | 3.8 |
+| a0f3305eb3557ea6.js | 1.6 |
+| 57ccf87f2a53a249.js | 1.1 |
+| **합계 JS** | **851.6 KB** |
+| 1bc0db49b7ca08ef.css | 68.0 KB |
+
+### 4-4. `.next/` 디렉터리 크기
+
+| 디렉터리 | 크기 |
+|----------|------|
+| `.next/server/` | 17.19 MB |
+| `.next/static/` | 1.15 MB |
+| `.next/cache/` | 0.68 MB |
+| **`.next/` 총합** | **~20 MB** (파일 425개) |
+
+### 4-5. 테스트 커버리지
+
+- **커버리지: 0%** — 테스트 파일 없음 (`*.test.*`, `*.spec.*` 파일 미존재)
+- **CI**: 없음 (`.github/workflows/` 미존재)
+
+### 4-6. Lighthouse
+
+- **미측정** — `measure` phase의 Lighthouse step에서 배포 URL 대상으로 측정 예정.
