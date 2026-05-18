@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 // Lighthouse CI 측정 결과 요약 — URL별 중앙값 markdown 표 출력
 //
 // lhci collect가 .lighthouseci/에 저장한 LHR(JSON)들을 읽어 URL별로 묶고,

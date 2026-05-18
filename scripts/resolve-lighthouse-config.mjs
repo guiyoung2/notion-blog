@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 // Lighthouse CI 측정용 config 생성 — 동적 상세 페이지 URL 주입
 //
 // lighthouserc.json(정적 베이스)을 읽어, 배포본 /api/posts에서 실제 발행된

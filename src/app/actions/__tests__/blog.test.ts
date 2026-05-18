@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createPostAction, type PostFormState } from '@/app/actions/blog';
 import { createPost } from '@/lib/notion';
+import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 
 vi.mock('@/lib/notion', () => ({
   createPost: vi.fn(),
@@ -62,10 +64,10 @@ describe('createPostAction', () => {
     expect(result.message).toBe('입력 값을 확인해주세요.');
   });
 
-  it('유효한 입력 시 createPost 호출 및 success: true 반환', async () => {
+  it('유효한 입력 시 createPost 호출 및 redirect("/") 실행', async () => {
     vi.mocked(createPost).mockResolvedValueOnce(undefined as never);
 
-    const result = await createPostAction(
+    await createPostAction(
       initialState,
       makeFormData('테스트 제목', '기술', '충분한 내용입니다 hello world test')
     );
@@ -75,7 +77,8 @@ describe('createPostAction', () => {
       tag: '기술',
       content: '충분한 내용입니다 hello world test',
     });
-    expect(result.success).toBe(true);
+    expect(revalidatePath).toHaveBeenCalledWith('/');
+    expect(redirect).toHaveBeenCalledWith('/');
   });
 
   it('createPost throw 시 실패 메시지 반환', async () => {
@@ -88,5 +91,6 @@ describe('createPostAction', () => {
 
     expect(result.message).toBe('블로그 포스트 생성에 실패했습니다.');
     expect(result.success).toBeUndefined();
+    expect(redirect).not.toHaveBeenCalled();
   });
 });

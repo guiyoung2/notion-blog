@@ -28,7 +28,7 @@ export interface PostFormState {
   success?: boolean;
 }
 
-export async function createPostAction(prevState: PostFormState, formData: FormData) {
+export async function createPostAction(prevState: PostFormState, formData: FormData): Promise<PostFormState> {
   // const title = formData.get('title') as string;
   // const tag = formData.get('tag') as string;
   // const content = formData.get('content') as string;
@@ -63,17 +63,14 @@ export async function createPostAction(prevState: PostFormState, formData: FormD
     revalidateTag('posts', 'max');
     // 상세 페이지 캐시 무효화 (step 1의 tags: ['post', slug]와 연동)
     revalidateTag(created.id, 'max');
-    return {
-      success: true,
-      message: '블로그 포스트가 성공적으로 생성되었습니다.',
-    };
+    revalidatePath('/');
   } catch (err) {
+    // eslint-disable-next-line no-console
     console.error(err);
     return {
       message: '블로그 포스트 생성에 실패했습니다.',
       formData: rawFormDate,
     };
   }
-  // revalidatePath('/');
-  // redirect('/');
+  redirect('/');
 }
