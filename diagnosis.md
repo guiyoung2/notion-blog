@@ -282,3 +282,29 @@ _점수는 0–100, 시간은 ms, CLS는 단위 없음_
 | `lib/notion.ts` | 0% | 0% | 0% | 0% |
 
 > **비고**: `lib/notion.ts`(Notion API 직접 호출)는 외부 의존성이므로 단위 테스트 대상 제외. `app/actions/blog.ts`는 `'use server'` 디렉티브로 인해 v8 커버리지 테이블에 별도 표시되지 않으나 5개 테스트가 실제로 검증함.
+
+### 5-5. Lighthouse 측정 결과 (after)
+
+> 측정일: 2026-05-19  
+> 측정 방식: Lighthouse CI (`lhci collect`, 모바일, 3회 측정 중앙값)  
+> 대상: 배포 URL `https://notion-blog-rose-phi.vercel.app`
+
+| 페이지 | Performance | Accessibility | Best Practices | SEO | FCP | LCP | TBT | CLS |
+|--------|-------------|---------------|----------------|-----|-----|-----|-----|-----|
+| / | 98 | 85 | 100 | 100 | 925 ms | 2425 ms | 10 ms | 0.000 |
+| /blog | 96 | 85 | 100 | 100 | 1369 ms | 2643 ms | 16 ms | 0.059 |
+| /blog/vibeboard-refactor | 99 | 96 | 100 | 100 | 1079 ms | 1967 ms | 21 ms | 0.000 |
+
+_점수는 0–100, 시간은 ms, CLS는 단위 없음_
+
+#### before/after 헤드라인 지표 비교
+
+| 페이지 | Performance (b→a) | LCP (b→a) | TBT (b→a) | CLS (b→a) |
+|--------|-------------------|-----------|-----------|-----------|
+| / | 98→98 | 2421ms→2425ms | 11ms→10ms | 0.000→0.000 |
+| /blog | 96→96 | 2642ms→2643ms | 13ms→16ms | 0.059→0.059 |
+| /blog/vibeboard-refactor | 99→99 | 1967ms→1967ms | 19ms→21ms | 0.000→0.000 |
+
+> **헤드라인**: 리팩토링 전후 Lighthouse 점수·Core Web Vitals 모두 변화 없음. 이번 리팩토링은 서버 사이드 캐시·태그 필터·데드 코드 정리가 주요 변경 범위였으므로 클라이언트 측 성능 지표에 영향을 주지 않는다. 수치 차이(LCP ±4ms, TBT ±2ms)는 측정 오차 범위 내다.
+
+_측정일: 2026-05-19 · 측정 환경: Lighthouse CI 헤드리스 Chrome, 모바일 에뮬레이션_
