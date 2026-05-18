@@ -146,6 +146,16 @@ Notion 마크다운 문자열
 - **커버리지: 0%** — 테스트 파일 없음 (`*.test.*`, `*.spec.*` 파일 미존재)
 - **CI**: 없음 (`.github/workflows/` 미존재)
 
-### 4-6. Lighthouse
+### 4-6. Lighthouse 기준선 (before)
 
-- **미측정** — `measure` phase의 Lighthouse step에서 배포 URL 대상으로 측정 예정.
+> 측정일: 2026-05-18  
+> 측정 방식: Lighthouse CI (`lhci collect`, 모바일, 3회 측정 중앙값)  
+> 대상: 배포 URL `https://notion-blog-rose-phi.vercel.app`
+
+| 페이지 | Performance | Accessibility | Best Practices | SEO | FCP | LCP | TBT | CLS |
+|--------|-------------|---------------|----------------|-----|-----|-----|-----|-----|
+| / | 98 | 85 | 100 | 100 | 1280 ms | 2421 ms | 11 ms | 0.000 |
+| /blog | 96 | 85 | 100 | 100 | 1369 ms | 2642 ms | 13 ms | 0.059 |
+| /blog/vibeboard-refactor | 99 | 96 | 100 | 100 | 917 ms | 1967 ms | 19 ms | 0.000 |
+
+_점수는 0–100, 시간은 ms, CLS는 단위 없음_
