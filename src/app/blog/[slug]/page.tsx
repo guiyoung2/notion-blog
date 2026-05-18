@@ -61,11 +61,16 @@ interface TocEntry {
 
 type Toc = Array<TocEntry>;
 
+// 빌드 타임 Notion API 실패 시 동적 렌더로 폴백
 export const generateStaticParams = async () => {
-  const { posts } = await getPublishedPosts();
-  return posts.map((post) => ({
-    slug: post.slug,
-  }));
+  try {
+    const { posts } = await getPublishedPosts();
+    return posts.map((post) => ({
+      slug: post.slug,
+    }));
+  } catch {
+    return [];
+  }
 };
 
 export const revalidate = 60;
